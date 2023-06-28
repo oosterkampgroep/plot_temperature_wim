@@ -1,2 +1,3 @@
 * meerdere kolommen
 * y-as label
+* delete plot knop naar plotframe
