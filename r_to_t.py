@@ -1,4 +1,24 @@
+"""" r_to_t.py
+This program is a translation from a similar program made by Wim in 
+labview. In order to use the function r_to_t, one gives it a number for
+the conversion needed and it returns the right conversion function. If 
+one is not familiar with the number, the r_to_t_dict can be used to 
+yield the number after one fills in the name of the sensor.
+
+The best way to use this program is to read the thermometer data with
+pandas and using the transform function on the data array.
+
+Last edit on 13-01-2025, added type hinting.
+"""
+
+
+from __future__ import annotations
+from typing import Callable
+
 import numpy as np
+
+
+__author__ = "Jaimy Plugge"
 
 
 r_to_t_dict = {"no conv.": 0,   # Default
@@ -16,15 +36,15 @@ r_to_t_dict = {"no conv.": 0,   # Default
                }
 
 
-def r_to_t(conv):
+def r_to_t(conv: int) -> Callable[[float], float]:
     # Functions, I know that some functions occur multiple times,
     # but I wanted to stay as true as possible to Wim's program.
 
-    def default(r):
+    def default(r: float | int) -> float | int:
         # case 0
         return r
 
-    def pt1000test(r):
+    def pt1000test(r: float | int) -> float:
         # case 1
         return -280+np.exp(+15.96010078315383
                            -5.777265693615240*(np.log(r))
@@ -33,7 +53,7 @@ def r_to_t(conv):
                            +0.0325135160361472*(np.log(r))**4
                            -0.001238253183442626*(np.log(r))**5)
 
-    def fhigh(r):
+    def fhigh(r: float | int) -> float:
         # case 2
         return np.exp(16.01256220008178
                       -24.81483636871209*(np.log(r))
@@ -43,7 +63,7 @@ def r_to_t(conv):
                       -0.1183163650122031*(np.log(r))**5
                       +0.00491460677567561*(np.log(r))**6 )
 
-    def spspecial(r):
+    def spspecial(r: float | int) -> float:
         # case 3
         if r >= 7850:
             return np.exp(+42.32605191233305
@@ -55,7 +75,7 @@ def r_to_t(conv):
                           +0.001147509051044717*(np.log(1*(r)))**6)
         return ((np.log(r)-6.58231)/28.60582)**(-1/0.4712)
 
-    def flow(r):
+    def flow(r: float | int) -> float:
         # case 4
         return 1e-3*np.exp(-710.0262877572307
                            +322.9179399161088*(np.log(1000*r))
@@ -64,7 +84,7 @@ def r_to_t(conv):
                            -0.2441816228296264*(np.log(1000*r))**4
                            +0.00451395822170572*(np.log(1000*r))**5 )
 
-    def ghigh(r):
+    def ghigh(r: float | int) -> float:
         # case 5
         return np.exp(29.58202363692958
                       -45.17177520349549*(np.log(r))
@@ -74,7 +94,7 @@ def r_to_t(conv):
                       -0.1852372231339097*(np.log(r))**5 
                       +0.00745225544312689*(np.log(r))**6)
 
-    def glow(r):
+    def glow(r: float | int) -> float:
         # case 6
         return 1e-3*np.exp(-544.5676017482177
                            +248.1849769707541*(np.log(1000*r))
@@ -83,7 +103,7 @@ def r_to_t(conv):
                            -0.1885849850224576*(np.log(1000*r))**4
                            +0.00350331131792698*(np.log(1000*r))**5)
 
-    def hhigh(r):
+    def hhigh(r: float | int) -> float:
         # case 7
         return np.exp(37.63866172713826
                       -56.63260628198017*(np.log(r))
@@ -93,7 +113,7 @@ def r_to_t(conv):
                       -0.2131888447891270*(np.log(r))**5 
                       +0.00844030051139322*(np.log(r))**6 )
 
-    def hlow(r):
+    def hlow(r: float | int) -> float:
         # case 8
         return 1e-3*np.exp(-649.6607257566526
                            +294.5907063066699*(np.log(1000*r))
@@ -102,7 +122,7 @@ def r_to_t(conv):
                            -0.2205324289126790*(np.log(1000*r))**4
                            +0.00406648820879758*(np.log(1000*r))**5 )
 
-    def nhigh(r):
+    def nhigh(r: float | int) -> float:
         # case 9
         return np.exp(73.41324970439078
                       -106.3311032542545*(np.log(r))
@@ -112,7 +132,7 @@ def r_to_t(conv):
                       -0.3148258368795170*(np.log(r))**5 
                       +0.01188214232583087*(np.log(r))**6)
 
-    def nlow(r):
+    def nlow(r: float | int) -> float:
         # case 10
         return 1e-3*np.exp(-1977.61071503373
                            +858.8345018658966*(np.log(1000*r))
@@ -121,7 +141,7 @@ def r_to_t(conv):
                            -0.5697361944449233*(np.log(1000*r))**4
                            +0.01003208556390609*(np.log(1000*r))**5 )
 
-    def fhighlow(r):
+    def fhighlow(r: float | int) -> float:
         # case 11
         if r >= 199.8:
             return np.exp(16.01256220008178
@@ -138,7 +158,7 @@ def r_to_t(conv):
                            -0.2441816228296264*(np.log(1000*r))**4
                            +0.00451395822170572*(np.log(1000*r))**5 )
 
-    def ghighlow(r):
+    def ghighlow(r: float | int) -> float:
         # case 12
         if r >= 204.7:
             return np.exp(29.58202363692958
@@ -156,7 +176,7 @@ def r_to_t(conv):
                            -0.1885849850224576*(np.log(1000*r))**4
                            +0.00350331131792698*(np.log(1000*r))**5)
     
-    def hhighlow(r):
+    def hhighlow(r: float | int) -> float:
         # case 13
         if r >= 212.79:
             return np.exp(37.63866172713826
@@ -173,7 +193,7 @@ def r_to_t(conv):
                            -0.2205324289126790*(np.log(1000*r))**4
                            +0.00406648820879758*(np.log(1000*r))**5 )
 
-    def nhighlow(r):
+    def nhighlow(r: float | int) -> float:
         # case 14, Mixing Chamber YETI
         if r >= 225.524:
             # N high
@@ -192,7 +212,7 @@ def r_to_t(conv):
                            -0.5697361944449233*(np.log(1000*r))**4
                            +0.01003208556390609*(np.log(1000*r))**5)
 
-    def lhighlow(r):
+    def lhighlow(r: float | int) -> float:
         # case 15
         if r >= 223.76:
             # L high
@@ -211,7 +231,7 @@ def r_to_t(conv):
                       -0.0419866882804895*(np.log(r-5.2))**4
                       +0.002200681550971356*(np.log(r-5.2))**5)
 
-    def mhighlow(r):
+    def mhighlow(r: float | int) -> float:
         # case 16
         if r >= 234.19:
             # M high
@@ -230,7 +250,7 @@ def r_to_t(conv):
                            -0.4063608406993035*(np.log(1000*r))**4
                            +0.00713527326482104*(np.log(1000*r))**5)
 
-    def RF100highlow(r):
+    def RF100highlow(r: float | int) -> float:
         # case 17
         if r >= 90:
             # RF100 high
@@ -248,11 +268,11 @@ def r_to_t(conv):
                       +140.391660314194*(np.log(r*0.1))**3
                       -14.857438050347*(np.log(r*0.1))**4)
 
-    def MRDS(r):
+    def MRDS(r: float | int) -> float:
         # case 18
         return 102073/(r-5.38)
 
-    def AR3(r):
+    def AR3(r: float | int) -> float:
         # case 19
         return np.exp(-16.985738592265
                       +20.869593118260*(np.log(r))
@@ -261,7 +281,7 @@ def r_to_t(conv):
                       -0.260713605058*(np.log(r))**4
                       +0.012529791664*(np.log(r))**5)
 
-    def A8(r):
+    def A8(r: float | int) -> float:
         # case 20
         return np.exp(-34.124813158161
                       +38.543806856537*(np.log(r))
