@@ -1,3 +1,16 @@
+"""plot_temperature_wim.py
+Use a gui to read a single thermometer file from Wim and read the last
+n lines from that file every 5 seconds. Multiple plot windows can be 
+opened and multiple thermometers can be plotted within the same plot. It
+uses r_to_t.py for the conversion, so that should be in the same folder 
+as from where the user runs this program.
+
+Last edit on 13-01-2025, added type hinting and comments.
+"""
+
+
+from __future__ import annotations
+from typing import Callable
 import tkinter as tk
 from tkinter import ttk
 from collections import deque
@@ -14,9 +27,60 @@ from matplotlib.ticker import ScalarFormatter, AutoLocator
 from r_to_t import r_to_t, r_to_t_dict
 
 
+__author__ = "Jaimy Plugge"
+
+
 # Obtain matplotlib colors
 color_view = mcolors.TABLEAU_COLORS.values()
-color_dict = dict(zip(range(len(color_view)-2), color_view))
+#color_dict = dict(zip(range(len(color_view)-2), color_view))
+color_view = ['#1f77b4', 
+			  '#ff7f0e', 
+			  '#2ca02c', 
+			  '#d62728', 
+			  '#9467bd', 
+			  '#8c564b', 
+			  '#e377c2', 
+			  '#7f7f7f', 
+			  '#1f77b4', 
+			  '#ff7f0e', 
+			  '#2ca02c', 
+			  '#d62728', 
+			  '#9467bd', 
+			  '#8c564b', 
+			  '#e377c2', 
+			  '#7f7f7f', 
+			  '#1f77b4', 
+			  '#ff7f0e', 
+			  '#2ca02c', 
+			  '#d62728', 
+			  '#9467bd', 
+			  '#8c564b', 
+			  '#e377c2', 
+			  '#7f7f7f']
+color_dict = {0: '#1f77b4', 
+			  1: '#ff7f0e', 
+			  2: '#2ca02c', 
+			  3: '#d62728', 
+			  4: '#9467bd', 
+			  5: '#8c564b', 
+			  6: '#e377c2', 
+			  7: '#7f7f7f',
+			  8: '#1f77b4', 
+			  9: '#ff7f0e', 
+			  10: '#2ca02c', 
+			  11: '#d62728', 
+			  12: '#9467bd', 
+			  13: '#8c564b', 
+			  14: '#e377c2', 
+			  15: '#7f7f7f',
+			  16: '#1f77b4', 
+			  17: '#ff7f0e', 
+			  18: '#2ca02c', 
+			  19: '#d62728', 
+			  20: '#9467bd', 
+			  21: '#8c564b', 
+			  22: '#e377c2', 
+			  23: '#7f7f7f'}
 
 
 # Global values
@@ -31,7 +95,27 @@ FORMATTER = mdates.ConciseDateFormatter(LOCATOR)
 
 
 class onofflabel(tk.Label):
-    def __init__(self, master, textvariable, active_color, command):
+    """Labels that can be toggled by clicking on them.
+    
+    The label checks if the mouse hovers over the label and when it is
+    clicked, it will show its active_color and run the given command.
+
+    Attributes
+    ----------
+    value: bool
+        Boolean that holds the current state of the label.
+    active_color: str
+        String that holds the hex code of the color that should be shown
+        when the label is active.
+    command: callable
+        The function that should run when the label is clicked, it
+        should not have any arguments.
+    """
+    def __init__(self, master: tk.Frame | tk.Tk | ttk.framelabel, 
+                       textvariable: tk.StringVar, 
+                       active_color: str, 
+                       command: Callable[[], None]):
+
         super().__init__(master=master, width=10, textvariable=textvariable)
         self.bind("<Button-1>", lambda event: self.toggle(event))
         self.bind("<Enter>", lambda event: self.hover(event))
@@ -41,7 +125,8 @@ class onofflabel(tk.Label):
         self.active_color = active_color
         self.command = command
 
-    def toggle(self, event=None):
+    def toggle(self, event: tk.Event=None) -> None:
+        """Changes the state of the label when clicked."""
         self.value = not self.value
         if self.value:
             self.configure(background=self.active_color)
@@ -49,14 +134,37 @@ class onofflabel(tk.Label):
             self.configure(background="SystemButtonFace")
         self.command()
 
-    def hover(self, event):
+    def hover(self, event: tk.Event) -> None:
+        """Change label appearance when mouse starts hovering label."""
         self.configure(relief="solid")
 
-    def leave_hover(self, event):
+    def leave_hover(self, event: tk.Event) -> None:
+        """Change label appearance when mouse stops hovering label."""
         self.configure(relief="flat")
 
 
-def read_n_last_lines(path_to_file, n):
+def read_n_last_lines(path_to_file: str, n: int) -> pd.DataFrame:
+    """
+    Function that reads the last <n> lines from a file. It is 
+    specifically written to read from the temperature files of Wim. It
+    returns a pandas dataframe with as the index the datetime of the
+    datapoints.
+
+    Parameters
+    ----------
+    path_to_file: str
+        String that holds the path to the file the user wants to read 
+        from.
+    n: int
+        The amount of lines that should be read from the end of the 
+        file.
+
+    Returns
+    -------
+    df: pd.Dataframe
+        A pandas dataframe that contains the last <n> lines from the
+        file. The index is set as the first column of the file.
+    """
     with open(path_to_file, 'r') as f:
         q = deque(f, n)  # lines read at the end
 
@@ -80,7 +188,12 @@ class Entrywidget(tk.Entry):
     checks if the value inside the entry does not 
     exceed the minimum or maximum value of that box. 
     """
-    def __init__(self, master, width, minmax, callfunc, textvariable=None):
+    def __init__(self, master: tk.Frame | tk.Tk | ttk.framelabel, 
+                       width: int, 
+                       minmax: tuple[int, int], 
+                       callfunc: Callable[[], None], 
+                       textvariable: tk.StringVar = None):
+
         super().__init__(master=master, width=width, textvariable=textvariable)
         self.minmax = minmax
 
@@ -90,7 +203,7 @@ class Entrywidget(tk.Entry):
         self.bind("<Down>", lambda event: self.down_arrow_input(event))
         self.bind("<Return>", lambda event: self.enter_input(event))
 
-    def enter_input(self, event=None):
+    def enter_input(self, event: tk.Event = None) -> None:
         number_str = self.get()
         if number_str[-1] == "k":
             number_float = float(number_str[:-1])
@@ -109,7 +222,7 @@ class Entrywidget(tk.Entry):
         self.insert(0, number_str)
         self.callfunc()
             
-    def up_arrow_input(self, event=None):
+    def up_arrow_input(self, event: tk.Event = None) -> None:
         tkinter_position = self.index(tk.INSERT)
         number_str = self.get()
         decimalindex = number_str.find(".")
@@ -140,7 +253,7 @@ class Entrywidget(tk.Entry):
         self.icursor(tkinter_position)
         self.callfunc()
 
-    def down_arrow_input(self, event=None):
+    def down_arrow_input(self, event: tk.Event = None) -> None:
         tkinter_position = self.index(tk.INSERT)
         number_str = self.get()
         decimalindex = number_str.find(".")
@@ -173,7 +286,51 @@ class Entrywidget(tk.Entry):
 
 
 class Plotframe(ttk.LabelFrame):
-    def __init__(self, master, name, color, max_columns, names_dict):
+    """Frame that holds a single plot.
+    
+    The plotframe is a tkinter frame that can be opened and closed. It
+    holds a single plot together with toggles for the data that can be
+    plotted, a combobox for the x-axis and checkboxes for locking the
+    limits of the axes.
+
+    Attributes
+    ----------
+    name: tk.StringVar
+        Tkinter StringVar that holds the name of the frame.
+    names_dict: dict
+        Dictionary that holds the names of the sensors that are used
+        within the program. It holds them to show in the onofflabels.
+    framelabel: ttk.Label
+        In order for the name to show on the frame, we need to put it
+        into a ttk label.
+    fig: matplotlib.figure.Figure
+        The figure in which the data should be plotted.
+    ax: matplotlib.axes
+        The axes onto which the data should be plotted.
+    canvas: matplotlib.backends.backend_tkagg.FigureCanvasTkAgg
+        A canvas is what tkinter needs to place the figure on.
+    navtoolbar: matplotlib.backends.backend_tkagg.NavigationToolbar2Tk
+        A navigation toolbar that adds multiple buttons for the user,
+        for example the zoom button.
+    plotcontrolframe: tk.Frame
+        A tkinter frame that holds the control buttons.
+    lockxvar: tk.BooleanVar
+        Tkinter booleanvar that holds information about the checkbox
+        that can be clicked to lock the x-axis. If true, the autoscale
+        is run after adding a new datapoint to keep the new datapoints
+        inside the plot.
+    lockyvar: tk.BooleanVar
+        Tkinter booleanvar that holds information about the checkbox
+        that can be clicked to lock the y-axis. If true, the autoscale
+        is run after adding a new datapoint to keep the new datapoints
+        inside the plot.
+    """
+    def __init__(self, master: tk.Frame | tk.Tk | ttk.framelabel, 
+                       name: str, 
+                       color: str, 
+                       max_columns: int, 
+                       names_dict: dict[int, tk.StringVar]):
+
         self.name = tk.StringVar(value=name)
         self.names_dict = names_dict
 
@@ -211,7 +368,8 @@ class Plotframe(ttk.LabelFrame):
 
         self.update_axis_controls(max_columns)
 
-    def update_axis_controls(self, max_columns):
+    def update_axis_controls(self, max_columns: int) -> None:
+        """Constructs the axis controls like toggle buttons for data."""
         xdataframelabel = ttk.Label(text="x axis", foreground="black")
         xdataframe = ttk.LabelFrame(master=self.plotcontrolframe, labelwidget=xdataframelabel)
         xdataframe.grid(row=1, column=0, sticky="nsew")
@@ -233,15 +391,18 @@ class Plotframe(ttk.LabelFrame):
             self.ydatadict[i] = onofflabel(master=ydataframe, textvariable=self.names_dict[i], active_color=color_dict[i-2], command=self.plotupdate)
             self.ydatadict[i].pack()
 
-    def construct_lines(self, max_columns):
+    def construct_lines(self, max_columns: int) -> None:
+        """Construct a matplitlib line for every sensor."""
         self.line_dict = {}
         for i in range(2, max_columns + 1):
             self.line_dict[i], = self.ax.plot([], [])
 
-    def change_position(self, new_name, new_color):
+    def change_position(self, new_name: str, new_color: str) -> None:
+        """Change the name and appearance of the plotframe."""
         self.framelabel.configure(text=new_name, foreground=new_color)
 
-    def plotupdate(self, event=None):
+    def plotupdate(self, event: tk.Event = None) -> None:
+        """Update the plot with new datapoints."""
         for i, line in self.line_dict.items():
             xent = self.xdata_dict[self.xdatacbb.get()]
             if xent == 0:
@@ -274,17 +435,43 @@ class Plotframe(ttk.LabelFrame):
         self.canvas.draw()
         self.navtoolbar.update()
 
-    def add_data(self, df):
+    def add_data(self, df: pd.DataFrame) -> None:
+        """Update the dataframe with new data."""
         self.df = df
 
-    def change_name(self, name):
+    def change_name(self, name: str) -> None:
+        """Change the name of the plotframe."""
         self.name.set(name)
 
-    def remove_window(self):
+    def remove_window(self) -> None:
+        """Remove the plotframe from the program."""
         self.destroy() 
 
 
 class Mainwindow():
+    """The main window of the program.
+    
+    The main window is the program itself. It holds the information of
+    the program and the user interface.
+
+    Attributes
+    ----------
+    mainwindow: tk.Tk()
+        The main window that holds the program, it is what the user 
+        interface can be placed upon.
+    used_dict: dict
+        Dictionary that holds booleans for which color and plot number
+        are in use.
+    frame_dict: dict
+        Dictionary that holds the plot frames.
+    name_dict: dict
+        Dictionary that holds the names of every plot frame.
+    data_loaded: bool
+        Variable that checks if a file has been loaded already.
+    max_columns: int
+        Holds the amount of columns in a file. Starts at zero as no file
+        has been loaded when starting the program.
+    """
     def __init__(self):
         self.mainwindow = tk.Tk()
         self.mainwindow.title('Thermometers Wim')
@@ -293,7 +480,6 @@ class Mainwindow():
         # keep track of used plot numbers
         self.used_dict = dict(zip(range(len(color_view)-2), np.zeros(len(color_view))))
         self.frame_dict = {}
-        self.chosen_channels = dict(zip(range(len(color_view)-2), np.zeros(len(color_view))))
         self.name_dict = {}
         self.data_loaded = False
         self.max_columns = 0
@@ -303,7 +489,8 @@ class Mainwindow():
 
         self.mainwindow.mainloop()
 
-    def construct_menu(self):
+    def construct_menu(self) -> None:
+        """Construct the upper menubar."""
         menubar = tk.Menu(self.mainwindow)
 
         # self.plotmenu = tk.Menu(menubar, tearoff=0)
@@ -314,7 +501,8 @@ class Mainwindow():
 
         self.mainwindow.config(menu=menubar)
 
-    def construct_controls(self):
+    def construct_controls(self) -> None:
+        """Place the controls on the window."""
         framelabel = ttk.Label(text="Controls", foreground="#fd04d9")
         controlframe = ttk.LabelFrame(master=self.mainwindow, labelwidget=framelabel)
         controlframe.grid(row=0, column=0, sticky="nsew")
@@ -357,7 +545,8 @@ class Mainwindow():
         self.start_btn.config(state="disabled")
         self.stop_btn.config(state="disabled")
 
-    def thermometer_setup(self, max_columns):
+    def thermometer_setup(self, max_columns: int) -> None:
+        """Construct the entry and conversionbox for the thermometers."""
         framelabel = ttk.Label(text="Thermometers", foreground="#fd04d9")
         thermometerframe = ttk.LabelFrame(master=self.mainwindow, labelwidget=framelabel)
         thermometerframe.grid(row=1, column=0, sticky="nsew")
@@ -377,7 +566,8 @@ class Mainwindow():
             self.thermometer_func_dict[i] = combo
 
 
-    def add_plot(self):
+    def add_plot(self) -> None:
+        """Add a plot to the window."""
         total_plots = int(sum(self.used_dict.values()))
         if total_plots < MAX_PLOTS:
             plot_number = min([i for i, val in self.used_dict.items() if val == 0])
@@ -398,7 +588,8 @@ class Mainwindow():
                 frame.ydatadict[plot_number + 2].toggle()
                 frame.plotupdate()
 
-    def remove_plot(self, number):
+    def remove_plot(self, number: int) -> None:
+        """Remove plot from the window."""
         self.frame_dict[number].remove_window()
         self.frame_dict.pop(number)
         self.name_dict.pop(number)
@@ -420,7 +611,8 @@ class Mainwindow():
             self.frame_dict[n-1].grid(row=row, column=column,padx=10,pady=10,sticky="nsew")
             self.frame_dict[n-1].change_position(f"{n-1}", color_dict[n-1])
 
-    def change_plot_name(self, number):
+    def change_plot_name(self, number: int) -> None:
+        """Change the name of a plotwindow. Is not in use yet."""
         old_name = self.frame_dict[number].name.get()
         self.name_dict[number].set(old_name)
 
@@ -442,11 +634,13 @@ class Mainwindow():
         name_entry.focus_set()
         name_entry.select_range(0, 'end')
 
-    def change_name(self, number, name):
+    def change_name(self, number: int, name: str) -> None:
+        """Function that should eventually call change_plot_name."""
         self.SubmitNameWindow.destroy()
         self.frame_dict[number].change_name(name)
 
-    def choose_file(self):
+    def choose_file(self) -> None:
+        """Function that opens a file dialog window to choose a file."""
         self.filename = tk.filedialog.askopenfilename(title="Choose file", 
                                                       filetypes=[('Data File in DAT Format', '*.dat')])
         if self.filename:
@@ -462,16 +656,18 @@ class Mainwindow():
             self.start_btn.config(state="normal")
             self.add_plot_btn.config(state="normal")
 
-    def plotupdate(self, event=None):
+    def plotupdate(self, event: tk.Event = None) -> None:
+        """Update the plot. It is called from read_data."""
         for key, frame in self.frame_dict.items():
             frame.add_data(self.df)
             frame.plotupdate()
 
-    def toggle_channel_dict(self, choices):
-        for key, val in self.chosen_channels.items():
-            self.chosen_channels[key] += choices[key]
+    # def toggle_channel_dict(self, choices):
+    #     for key, val in self.chosen_channels.items():
+    #         self.chosen_channels[key] += choices[key]
 
-    def read_data(self, event=None):
+    def read_data(self, event: tk.Event = None) -> None:
+        """Read the data from the file. It is called from read_in_loop."""
         self.df = read_n_last_lines(self.filename, int(self.last_points_var.get()))
         for col in self.df.columns[1:]:
             self.df[col] = self.df[col].transform(r_to_t(r_to_t_dict[self.thermometer_func_dict[col].get()]))
@@ -484,25 +680,29 @@ class Mainwindow():
         #     frame.update_axis_controls(self.max_columns)
         self.plotupdate()
 
-    def start_reading(self):
+    def start_reading(self) -> None:
+        """Start reading loop."""
         self.start_btn.config(state="disabled")
         self.stop_btn.config(state="normal")
         self.choose_file_btn.config(state="disabled")
         self.read = True
         self.mainwindow.after(1000, self.read_in_loop)
 
-    def stop_reading(self):
+    def stop_reading(self) -> None:
+        """Stop the reading loop."""
         self.start_btn.config(state="normal")
         self.stop_btn.config(state="disabled")
         self.choose_file_btn.config(state="normal")
         self.read = False
 
-    def read_in_loop(self):
+    def read_in_loop(self) -> None:
+        """Keep reading the file every 5 seconds."""
         if self.read:
             self.read_data()
         self.mainwindow.after(5000, self.read_in_loop)
 
-    def quit_me(self):
+    def quit_me(self) -> None:
+        """Function that catches closing the window to nicely close."""
         self.mainwindow.quit()
         self.mainwindow.destroy()
 
